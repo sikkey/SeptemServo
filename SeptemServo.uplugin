@@ -1,0 +1,28 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "SeptemServo",
+	"Description": "Advanced Visual Server Written by Unreal4.  Build for Windows and Linux.",
+	"Category": "Server",
+	"CreatedBy": "7Mersenne",
+	"CreatedByURL": "https://github.com/sikkey/SeptemServo",
+	"DocsURL": "https://github.com/sikkey/SeptemServo/wiki",
+	"MarketplaceURL": "",
+	"SupportURL": "https://github.com/sikkey/SeptemServo/issues",
+	"EngineVersion": "4.22.0",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "SeptemServo",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win32",
+				"Win64"
+			]
+		}
+	]
+}
