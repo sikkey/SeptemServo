@@ -10,7 +10,7 @@ plugin version of SeptemServoPro , Alpha
 3. cd the directory of the project
 4. mkdir ./Plugins/
 5. cd ./Plugins/
-6. git submodule add https://github.com/7Mersenne/SeptemServo.git SeptemServo
+6. git submodule add https://github.com/sikkey/SeptemServo.git SeptemServo
 	(Makesure the directory name is SeptemServo)
 7. generate vs project files
 8. build vs project
@@ -38,7 +38,7 @@ plugin version of SeptemServoPro , Alpha
 4. (可选)创建Plugins目录	mkdir ./Plugins/
 5. 进入Plugins目录	cd ./Plugins/
 6. 运行命令行，添加git子模组(确保子模组文件夹名为SeptemServo)
-	git submodule add https://github.com/7Mersenne/SeptemServo.git SeptemServo
+	git submodule add https://github.com/sikkey/SeptemServo.git SeptemServo
 7. 右键.uproject文件，重新生成VS工程文件
 8. 重新编译VS工程
 9. 重新打开UE4工程，并重新在引擎编辑器中测试或重编译项目
