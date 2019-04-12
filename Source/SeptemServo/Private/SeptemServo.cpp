@@ -4,7 +4,7 @@
 
 #define LOCTEXT_NAMESPACE "FSeptemServoModule"
 
-//#define SEPTEM_SERVO_PLUGIN
+#define SEPTEM_SERVO_PLUGIN
 
 void FSeptemServoModule::StartupModule()
 {
