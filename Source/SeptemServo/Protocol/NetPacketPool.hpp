@@ -9,6 +9,18 @@
 #define MAX_NETPACKET_IN_POOL 1024
 
 /**
+ * SPPMode is used select the algorithm of the Servo Packet Pool
+ * This is only used by templates at compile time to generate one code path or another.
+ */
+enum class SPPMode
+{
+	Stack = 0,
+	Queue = 1,
+	Heap = 2,
+	Fast = Queue
+};
+
+/**
  * net packet pool base class
  * for set any pool algorithm 
  */

@@ -16,5 +16,10 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
+	/**
+	 * Get the singleton of Protocol
+	 * Defend create 2 singleton from different .so/.dll modules
+	 * @return the singleton of FServoProtocol  
+	 */
 	static FServoProtocol* ProtocolSingleton();
 };
