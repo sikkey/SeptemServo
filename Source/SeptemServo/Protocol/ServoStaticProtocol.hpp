@@ -122,23 +122,25 @@ struct SEPTEMSERVO_API TSNetPacket
 
 /**
  * T::		the class  handle in TSNetPacket<T>
- * SingletonPtrMode::	the thread-safe mode of pSingleton
+ * PtrMode::	the thread-safe mode of TSharedPtr
+ * PoolMode:: the mdoe of pools
  */
-template<typename T, ESPMode SingletonPtrMode = ESPMode::Fast, SPPMode PoolMode = SPPMode::Fast>
+template<typename T, ESPMode PtrMode = ESPMode::ThreadSafe, SPPMode PoolMode = SPPMode::Fast>
 class SEPTEMSERVO_API TServoProtocol
 {
 protected:
-	static TServoProtocol<T, SingletonPtrMode, PoolMode> * pSingleton;
+	static TServoProtocol<T, PtrMode, PoolMode> * pSingleton;
 	static FCriticalSection mCriticalSection;
 
 	int32 Syncword;
 	// force to push/pop TSharedPtr
-	TNetPacketPool<TSNetPacket<T> , ESPMode::ThreadSafe>* PacketPool;
+	TNetPacketPool<TSNetPacket<T> , PtrMode>* PacketPool;
 	int32 PacketPoolCount;
-	Septem::TSharedRecyclePool<TSNetPacket<T> , ESPMode::ThreadSafe> RecyclePool;
+	Septem::TSharedRecyclePool<TSNetPacket<T> , PtrMode> RecyclePool;
 private:
 	TServoProtocol()
 		:Syncword(DEFAULT_SYNCWORD_INT32)
+		, PacketPool(nullptr)
 		, PacketPoolCount(0)
 		, RecyclePool(MAX_NETPACKET_IN_POOL)
 	{
@@ -167,16 +169,41 @@ public:
 	}
 
 	// thread safe; singleton will init when first call get()
-	static TServoProtocol<T, SingletonPtrMode, PoolMode>* Get();
+	static TServoProtocol<T, PtrMode, PoolMode>* Get();
 	// thread safe; singleton will init when first call getRef()
-	static TServoProtocol<T, SingletonPtrMode, PoolMode>& GetRef();
+	static TServoProtocol<T, PtrMode, PoolMode>& GetRef();
+
+	// danger call, but fast
+	static TServoProtocol<T, PtrMode, PoolMode>* Singleton();
+	// danger call, but fast
+	static TServoProtocol<T, PtrMode, PoolMode>& SingletonRef();
+
+	// push recv packet into packet pool
+	bool Push(const TSharedPtr<TSNetPacket<T>, PtrMode>& InNetPacket);
+	// pop from packet pool
+	bool Pop(TSharedPtr<TSNetPacket<T>, PtrMode>& OutNetPacket);
+	int32 PacketPoolNum();
+
+	//=========================================
+	//		Net Packet Pool Memory Management
+	//=========================================
+	static int32 RecyclePoolMaxnum;
+
+	// please call ReUse or set value manulity after recycle alloc
+	TSharedPtr< TSharedPtr<TSNetPacket<T>, PtrMode> AllocNetPacket();
+	// recycle dealloc
+	void DeallockNetPacket(const TSharedPtr < TSNetPacket<T>& InSharedPtr, bool bForceRecycle = false);
+	int32 RecyclePoolNum();
 };
 
-template<typename T, ESPMode SingletonPtrMode, SPPMode PoolMode>
-TServoProtocol<T, SingletonPtrMode, PoolMode>* TServoProtocol<T, SingletonPtrMode, PoolMode>::pSingleton = nullptr;
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+TServoProtocol<T, PtrMode, PoolMode>* TServoProtocol<T, PtrMode, PoolMode>::pSingleton = nullptr;
 
-template<typename T, ESPMode SingletonPtrMode, SPPMode PoolMode>
-FCriticalSection TServoProtocol<T, SingletonPtrMode, PoolMode>::mCriticalSection;
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+FCriticalSection TServoProtocol<T, PtrMode, PoolMode>::mCriticalSection;
+
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+int32 TServoProtocol<T, PtrMode, PoolMode>::RecyclePoolMaxnum = 0;
 
 template<typename T>
 inline bool TSNetPacket<T>::IsValid()
@@ -326,24 +353,96 @@ inline bool TSNetPacket<T>::operator<(TSNetPacket<T>&& Other)
 	return Foot.timestamp < Other.Foot.timestamp;
 }
 
-template<typename T, ESPMode SingletonPtrMode, SPPMode PoolMode>
-inline TServoProtocol<T, SingletonPtrMode, PoolMode>* TServoProtocol<T, SingletonPtrMode, PoolMode>::Get()
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline TServoProtocol<T, PtrMode, PoolMode>* TServoProtocol<T, PtrMode, PoolMode>::Get()
 {
 	if (nullptr == pSingleton) {
 		FScopeLock lockSingleton(&mCriticalSection);
-		pSingleton = new TServoProtocol<T, SingletonPtrMode, PoolMode>();
+		pSingleton = new TServoProtocol<T, PtrMode, PoolMode>();
 	}
 
 	return pSingleton;
 }
 
-template<typename T, ESPMode SingletonPtrMode, SPPMode PoolMode>
-inline TServoProtocol<T, SingletonPtrMode, PoolMode>& TServoProtocol<T, SingletonPtrMode, PoolMode>::GetRef()
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline TServoProtocol<T, PtrMode, PoolMode>& TServoProtocol<T, PtrMode, PoolMode>::GetRef()
 {
 	if (nullptr == pSingleton) {
 		FScopeLock lockSingleton(&mCriticalSection);
-		pSingleton = new TServoProtocol<T, SingletonPtrMode, PoolMode>();
+		pSingleton = new TServoProtocol<T, PtrMode, PoolMode>();
 	}
 
 	return *pSingleton;
+}
+
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline TServoProtocol<T, PtrMode, PoolMode>* TServoProtocol<T, PtrMode, PoolMode>::Singleton()
+{
+	return pSingleton;
+}
+
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline TServoProtocol<T, PtrMode, PoolMode>& TServoProtocol<T, PtrMode, PoolMode>::SingletonRef()
+{
+	check(pSingleton);
+	return *pSingleton;
+}
+
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline bool TServoProtocol<T, PtrMode, PoolMode>::Push(const TSharedPtr<TSNetPacket<T>, PtrMode>& InNetPacket)
+{
+	if (PacketPool->Push(InNetPacket))
+	{
+		++PacketPoolCount;
+		return true;
+	}
+
+	return false;
+}
+
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline bool TServoProtocol<T, PtrMode, PoolMode>::Pop(TSharedPtr<TSNetPacket<T>, PtrMode>& OutNetPacket)
+{
+	if (PacketPool->Pop(OutNetPacket))
+	{
+		--PacketPoolCount;
+		return true;
+	}
+
+	return false;
+}
+
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline int32 TServoProtocol<T, PtrMode, PoolMode>::PacketPoolNum()
+{
+	return PacketPoolCount;
+}
+
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline TSharedPtr < TSharedPtr<TSNetPacket<T>, PtrMode> TServoProtocol<T, PtrMode, PoolMode>::AllocNetPacket()
+{
+	return RecyclePool.Alloc();
+}
+
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline void TServoProtocol<T, PtrMode, PoolMode>::DeallockNetPacket(const TSharedPtr < TSNetPacket<T>& InSharedPtr, bool bForceRecycle = false)
+{
+	if (!InSharedPtr.IsValid())
+		return;
+
+	InSharedPtr->OnDealloc();
+	if (bForceRecycle)
+	{
+		RecyclePool.DeallocForceRecycle(InSharedPtr);
+	}
+	else
+	{
+		RecyclePool.Dealloc(InSharedPtr);
+	}
+}
+
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline int32 TServoProtocol<T, PtrMode, PoolMode>::RecyclePoolNum()
+{
+	return RecyclePool.Num();
 }
