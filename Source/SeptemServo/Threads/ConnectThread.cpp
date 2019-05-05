@@ -2,6 +2,7 @@
 
 #include "ConnectThread.h"
 #include "../Protocol/ServoProtocol.h"
+#include "../Protocol/ServoStaticProtocol.hpp"
 
 // default buffer max  = 1mb
 int32 FConnectThread::MaxReceivedCount = 1024 * 1024;
