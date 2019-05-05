@@ -137,29 +137,6 @@ protected:
 	TNetPacketPool<TSNetPacket<T> , PtrMode>* PacketPool;
 	int32 PacketPoolCount;
 	Septem::TSharedRecyclePool<TSNetPacket<T> , PtrMode> RecyclePool;
-private:
-	TServoProtocol()
-		:Syncword(DEFAULT_SYNCWORD_INT32)
-		, PacketPool(nullptr)
-		, PacketPoolCount(0)
-		, RecyclePool(MAX_NETPACKET_IN_POOL)
-	{
-		check(pSingleton == nullptr && "Protocol singleton can't create 2 object!");
-		pSingleton = this;
-		
-		switch (PoolMode)
-		{
-		case SPPMode::Stack :
-			PacketPool = new TNetPacketStack<FSNetPacket, ESPMode::ThreadSafe>();
-			break;
-		case SPPMode::Heap :
-			PacketPool = new TNetPacketHeap<FSNetPacket, ESPMode::ThreadSafe>();
-			break;
-		default:
-			PacketPool = new TNetPacketQueue<FSNetPacket, ESPMode::ThreadSafe>();
-			break;
-		}
-	}
 
 public:
 	virtual ~TServoProtocol()
@@ -190,10 +167,41 @@ public:
 	static int32 RecyclePoolMaxnum;
 
 	// please call ReUse or set value manulity after recycle alloc
-	TSharedPtr< TSharedPtr<TSNetPacket<T>, PtrMode> AllocNetPacket();
+	TSharedPtr<TSNetPacket<T>, PtrMode> AllocNetPacket();
 	// recycle dealloc
-	void DeallockNetPacket(const TSharedPtr < TSNetPacket<T>& InSharedPtr, bool bForceRecycle = false);
+	void DeallockNetPacket(const TSharedPtr < TSNetPacket<T>, PtrMode> & InSharedPtr, bool bForceRecycle = false);
 	int32 RecyclePoolNum();
+
+	//=========================================
+	//		Net Packet Pool & Recycle Pool Union Control
+	//=========================================
+
+	// pop from packetpool to OutRecyclePacket, auto recycle
+	bool PopWithRecycle(TSharedPtr<TSNetPacket<T>, PtrMode>& OutRecyclePacket);
+
+private:
+	TServoProtocol()
+		:Syncword(DEFAULT_SYNCWORD_INT32)
+		, PacketPool(nullptr)
+		, PacketPoolCount(0)
+		, RecyclePool(RecyclePoolMaxnum)
+	{
+		check(pSingleton == nullptr && "Protocol singleton can't create 2 object!");
+		pSingleton = this;
+
+		switch (PoolMode)
+		{
+		case SPPMode::Stack:
+			PacketPool = new TNetPacketStack<FSNetPacket, ESPMode::ThreadSafe>();
+			break;
+		case SPPMode::Heap:
+			PacketPool = new TNetPacketHeap<FSNetPacket, ESPMode::ThreadSafe>();
+			break;
+		default:
+			PacketPool = new TNetPacketQueue<FSNetPacket, ESPMode::ThreadSafe>();
+			break;
+		}
+	}
 };
 
 template<typename T, ESPMode PtrMode, SPPMode PoolMode>
@@ -203,7 +211,7 @@ template<typename T, ESPMode PtrMode, SPPMode PoolMode>
 FCriticalSection TServoProtocol<T, PtrMode, PoolMode>::mCriticalSection;
 
 template<typename T, ESPMode PtrMode, SPPMode PoolMode>
-int32 TServoProtocol<T, PtrMode, PoolMode>::RecyclePoolMaxnum = 0;
+int32 TServoProtocol<T, PtrMode, PoolMode>::RecyclePoolMaxnum = 1024;
 
 template<typename T>
 inline bool TSNetPacket<T>::IsValid()
@@ -419,13 +427,13 @@ inline int32 TServoProtocol<T, PtrMode, PoolMode>::PacketPoolNum()
 }
 
 template<typename T, ESPMode PtrMode, SPPMode PoolMode>
-inline TSharedPtr < TSharedPtr<TSNetPacket<T>, PtrMode> TServoProtocol<T, PtrMode, PoolMode>::AllocNetPacket()
+inline TSharedPtr<TSNetPacket<T>, PtrMode> TServoProtocol<T, PtrMode, PoolMode>::AllocNetPacket()
 {
 	return RecyclePool.Alloc();
 }
 
 template<typename T, ESPMode PtrMode, SPPMode PoolMode>
-inline void TServoProtocol<T, PtrMode, PoolMode>::DeallockNetPacket(const TSharedPtr < TSNetPacket<T>& InSharedPtr, bool bForceRecycle = false)
+inline void TServoProtocol<T, PtrMode, PoolMode>::DeallockNetPacket(const TSharedPtr<TSNetPacket<T>, PtrMode>& InSharedPtr, bool bForceRecycle)
 {
 	if (!InSharedPtr.IsValid())
 		return;
@@ -445,4 +453,18 @@ template<typename T, ESPMode PtrMode, SPPMode PoolMode>
 inline int32 TServoProtocol<T, PtrMode, PoolMode>::RecyclePoolNum()
 {
 	return RecyclePool.Num();
+}
+
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline bool TServoProtocol<T, PtrMode, PoolMode>::PopWithRecycle(TSharedPtr<TSNetPacket<T>, PtrMode>& OutRecyclePacket)
+{
+	TSharedPtr<TSNetPacket<T>, PtrMode> newPacket;
+	if (Pop(newPacket))
+	{
+		DeallockNetPacket(OutRecyclePacket);
+		OutRecyclePacket = MoveTemp(newPacket);
+		return true;
+	}
+
+	return false;
 }
