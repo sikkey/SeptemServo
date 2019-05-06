@@ -68,6 +68,7 @@ private:
 	FIPv4Address ClientIPAdress;		// client ip
 	int32 Port;										// client Port
 	int32 RankId;									// rank id
+	int32 Syncword;								// syncword
 
 	TArray<uint8> ReceivedData;
 	static int32 MaxReceivedCount; // = 1024 * 1024;
