@@ -26,6 +26,8 @@ void ATestServerActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	// TODO: Register TestPackets into FProtocolFactory
+
 	if (bListenInit)
 		RunServer();
 }

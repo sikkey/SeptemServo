@@ -3,6 +3,7 @@
 #include "ConnectThread.h"
 #include "../Protocol/ServoProtocol.h"
 #include "../Protocol/ServoStaticProtocol.hpp"
+#include "../Protocol/ProtocolFactory.h"
 
 // default buffer max  = 1mb
 int32 FConnectThread::MaxReceivedCount = 1024 * 1024;
@@ -61,6 +62,7 @@ uint32 FConnectThread::Run()
 	int32 BytesRead = 0;
 	bool bRcev = false;
 	FServoProtocol* ServoProtocol = FServoProtocol::Get();
+	FProtocolFactory* ProtocolFactory = FProtocolFactory::Get();
 	FSNetBufferHead PacketHead;
 	PacketHead.syncword = Syncword;
 
@@ -101,7 +103,7 @@ uint32 FConnectThread::Run()
 				{
 
 					//------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-					// TODO: New version of protocol, use buffer body and template class body
+					// New version of protocol, use buffer body and template class body
 					//------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 					
 					// 1. use syncword to find the index of PacketHead
@@ -128,18 +130,18 @@ uint32 FConnectThread::Run()
 					TotalBytesRead += FSNetBufferHead::MemSize();
 
 					// 4. select PacketHead.version for deserialize packet body
-					if (PacketHead.IsSerializedPacket())
+					if (PacketHead.IsSerializedPacket() && ProtocolFactory->IsProtocolRegister(PacketHead.uid))
 					{
-						// TODO: serialiezed packet
+						// serialiezed packet
+						ProtocolFactory->CallProtocolDeserializeWithoutCheck(PacketHead, ReceivedData.GetData() + TotalBytesRead, ReceivedData.Num() - TotalBytesRead, RecivedBytesRead);
 					}
 					else {
 						// buffer packet
 						TSharedPtr<FSNetPacket, ESPMode::ThreadSafe> pPacket(ServoProtocol->AllocNetPacket());
 						pPacket->ReUse(PacketHead, ReceivedData.GetData() + TotalBytesRead, ReceivedData.Num() - TotalBytesRead, RecivedBytesRead);
 						TotalBytesRead += RecivedBytesRead;
-						UE_LOG(LogTemp, Display, TEXT("FConnectThread: write bytes %d, total write bytes %d \n"), RecivedBytesRead, TotalBytesRead);
-
 						FPlatformMisc::MemoryBarrier();
+						UE_LOG(LogTemp, Display, TEXT("FConnectThread: write bytes %d, total write bytes %d \n"), RecivedBytesRead, TotalBytesRead);
 
 						if (pPacket->IsValid())
 						{
