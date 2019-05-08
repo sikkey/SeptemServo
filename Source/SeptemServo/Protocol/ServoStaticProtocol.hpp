@@ -114,6 +114,7 @@ struct SEPTEMSERVO_API TSNetPacket
 	// static class template not need heartbeat
 	//static TSNetPacket* CreateHeartbeat(int32 InSyncword = DEFAULT_SYNCWORD_INT32);
 	void ReUse(uint8* Data, int32 BufferSize, int32& BytesRead, int32 InSyncword = DEFAULT_SYNCWORD_INT32);
+	void ReUse(FSNetBufferHead & InHead, uint8 * Buffer, int32 BufferSize, int32 & BytesRead);
 	void WriteToArray(TArray<uint8>& InBufferArr);
 	void OnDealloc();
 	void OnAlloc();
@@ -178,6 +179,11 @@ public:
 
 	// pop from packetpool to OutRecyclePacket, auto recycle
 	bool PopWithRecycle(TSharedPtr<TSNetPacket<T>, PtrMode>& OutRecyclePacket);
+
+	//=========================================
+	//		Events | Lambda | Delegates
+	//=========================================
+	void OnReceivedPacket(FSNetBufferHead& InHead, uint8* Buffer, int32 BufferSize, int32&ReceivedBytesRead);
 
 private:
 	TServoProtocol()
@@ -284,6 +290,64 @@ inline void TSNetPacket<T>::ReUse(uint8 * Data, int32 BufferSize, int32 & BytesR
 	}
 
 	// 4. read foot
+	if (!Foot.MemRead(Data + index, BufferSize - index))
+	{
+		// failed to read from the rest buffer
+		BytesRead = BufferSize;
+		return;
+	}
+
+	index += FSNetBufferFoot::MemSize();
+	fastcode ^= Foot.XOR();
+
+	BytesRead = index;
+	bFastIntegrity = fastcode == 0;
+
+	sid = Head.SessionID();
+
+	return;
+}
+
+template<typename T>
+inline void TSNetPacket<T>::ReUse(FSNetBufferHead & InHead, uint8 * Buffer, int32 BufferSize, int32 & BytesRead)
+{
+	sid = 0;
+	bFastIntegrity = false;
+
+	// 1. setup head
+	Head = InHead;
+	int32 index = 0;
+	uint8 fastcode = 0;
+
+	fastcode ^= Head.XOR();
+
+	if (0 == Head.uid)
+	{
+		sid = Head.SessionID();
+	}
+
+	// 2. check and read body
+	if (0 != Head.uid)
+	{
+		// size check
+		if (Body.MemSize() != Head.size)
+		{
+			// failed to read from the rest buffer
+			BytesRead = BufferSize;
+			return;
+		}
+
+		if (!Body.Deserialize(Data + index, BufferSize - index))
+		{
+			// failed to read from the rest buffer
+			BytesRead = BufferSize;
+			return;
+		}
+		index += Body.MemSize();
+		fastcode ^= Body.XOR();
+	}
+
+	// 3. read foot
 	if (!Foot.MemRead(Data + index, BufferSize - index))
 	{
 		// failed to read from the rest buffer
@@ -467,4 +531,21 @@ inline bool TServoProtocol<T, PtrMode, PoolMode>::PopWithRecycle(TSharedPtr<TSNe
 	}
 
 	return false;
+}
+
+template<typename T, ESPMode PtrMode, SPPMode PoolMode>
+inline void TServoProtocol<T, PtrMode, PoolMode>::OnReceivedPacket(FSNetBufferHead & InHead, uint8 * Buffer, int32 BufferSize, int32 & ReceivedBytesRead)
+{
+	TSharedPtr<TSNetPacket<T>, PtrMode> pPacket(AllocNetPacket());
+
+	pPacket->ReUse(PacketHead, Buffer, BufferSize, RecivedBytesRead);
+
+	if (pPacket->IsValid())
+	{
+		Push(pPacket);
+	}
+	else {
+		// packet is illegal, dealloc shared pointer
+		DeallockNetPacket(pPacket);
+	}
 }

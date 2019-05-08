@@ -3,10 +3,20 @@
 
 #include "TestPackets.h"
 
-TestPackets::TestPackets()
+FTestPackets::FTestPackets()
 {
 }
 
-TestPackets::~TestPackets()
+FTestPackets::~FTestPackets()
 {
+}
+
+int32 FNetBody1exo::MemSize()
+{
+	return sizeof(FNetBody1exo);
+}
+
+int32 FNetBody2exo::MemSize()
+{
+	return sizeof(FNetBody2exo);
 }

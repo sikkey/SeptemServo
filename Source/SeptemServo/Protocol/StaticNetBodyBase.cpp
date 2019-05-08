@@ -16,7 +16,7 @@ bool FStaticNetBodyBase::Serialize(uint8* Data, int32 BufferSize, int32& OutSize
 		return false;
 	}
 
-	//FMemory::Memcpy(Data, this, OutSize);
+	FMemory::Memcpy(Data, this, OutSize);
 
 	return true;
 }
@@ -27,7 +27,7 @@ bool FStaticNetBodyBase::Deserialize(uint8* Data, int32 BufferSize)
 	if (BufferSize < MemSize())
 		return false;
 
-	//FMemory::Memcpy(this, Data, MemSize());
+	FMemory::Memcpy(this, Data, MemSize());
 	return true;
 }
 

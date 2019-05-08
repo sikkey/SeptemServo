@@ -134,6 +134,7 @@ uint32 FConnectThread::Run()
 					{
 						// serialiezed packet
 						ProtocolFactory->CallProtocolDeserializeWithoutCheck(PacketHead, ReceivedData.GetData() + TotalBytesRead, ReceivedData.Num() - TotalBytesRead, RecivedBytesRead);
+						TotalBytesRead += RecivedBytesRead;
 					}
 					else {
 						// buffer packet

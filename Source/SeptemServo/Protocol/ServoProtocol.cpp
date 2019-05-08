@@ -295,10 +295,8 @@ void FSNetPacket::ReUse(FSNetBufferHead & InHead, uint8 * Data, int32 BufferSize
 
 	// 1. setup head
 	Head = InHead;
+	int32 index = 0;
 	uint8 fastcode = 0;
-
-	// 1. find syncword for head
-	int32 index = BufferBufferSyncword(Data, BufferSize, Head.syncword);
 
 	fastcode ^= Head.XOR();
 
