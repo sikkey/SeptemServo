@@ -1,7 +1,6 @@
 // Copyright (c) 2013-2019 7Mersenne All Rights Reserved.
 
 #include "TestServerActor.h"
-#include "TestPackets.h"
 
 // Sets default values
 ATestServerActor::ATestServerActor()
@@ -27,7 +26,8 @@ void ATestServerActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// TODO: Register TestPackets into FProtocolFactory
+	// Register TestPackets into FProtocolFactory
+	FTestPackets();
 
 	if (bListenInit)
 		RunServer();
@@ -52,6 +52,20 @@ void ATestServerActor::Tick(float DeltaTime)
 	{
 		FServoProtocol::Get()->DeallockNetPacket(LastPacket);
 		LastPacket = MoveTemp(newPacket);
+	}
+
+	TSharedPtr<TSNetPacket<FNetBody1exo>, ESPMode::ThreadSafe> new1exoPacket;
+	if (TServoProtocol<FNetBody1exo, ESPMode::ThreadSafe, SPPMode::Queue>::Get()->Pop(new1exoPacket))
+	{
+		TServoProtocol<FNetBody1exo, ESPMode::ThreadSafe, SPPMode::Queue>::Get()->DeallockNetPacket(Last1exoPacket);
+		Last1exoPacket = MoveTemp(new1exoPacket);
+	}
+
+	TSharedPtr<TSNetPacket<FNetBody2exo>, ESPMode::ThreadSafe> new2exoPacket;
+	if (TServoProtocol<FNetBody2exo, ESPMode::ThreadSafe, SPPMode::Queue>::Get()->Pop(new2exoPacket))
+	{
+		TServoProtocol<FNetBody2exo, ESPMode::ThreadSafe, SPPMode::Queue>::Get()->DeallockNetPacket(Last2exoPacket);
+		Last2exoPacket = MoveTemp(new2exoPacket);
 	}
 }
 
