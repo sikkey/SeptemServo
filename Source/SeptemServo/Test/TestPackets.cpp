@@ -22,6 +22,9 @@ void FTestPackets::OnRegistPackets()
 		//ProtocolFactory->RegisterProtocolDeserialize(1002, &(TServoProtocol < FNetBody1exo, ESPMode::ThreadSafe, SPPMode::Queue>::Get()->OnReceivedPacket));
 		//ProtocolFactory->RegisterProtocolDeserialize(1003, &(TServoProtocol < FNetBody2exo, ESPMode::ThreadSafe, SPPMode::Queue>::Get()->OnReceivedPacket));
 		
+		// TODO: use this line with a macro
+		// like : __REG_PROTOCOL_DESERIALIZE(UID, TYPE);
+
 		ProtocolFactory->RegisterProtocolDeserialize(10002
 			, std::bind(&TServoProtocol < FNetBody1exo, ESPMode::ThreadSafe, SPPMode::Queue>::OnReceivedPacket
 				, TServoProtocol < FNetBody1exo, ESPMode::ThreadSafe, SPPMode::Queue>::Get()
