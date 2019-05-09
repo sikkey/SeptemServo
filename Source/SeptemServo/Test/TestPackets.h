@@ -18,7 +18,7 @@ struct SEPTEMSERVO_API FExoRobo16f
 #pragma pack(push, 1)
 struct SEPTEMSERVO_API FNetBody1exo : public FStaticNetBodyBase
 {
-	// uid : 1002
+	// uid : 10002
 	//==============
 	// int32 roboData.size
 	// int32 roboData.frameId
@@ -40,7 +40,7 @@ struct SEPTEMSERVO_API FNetBody1exo : public FStaticNetBodyBase
 #pragma pack(push, 1)
 struct SEPTEMSERVO_API FNetBody2exo : public FStaticNetBodyBase
 {
-	// uid : 1003
+	// uid : 10003
 	//==============
 	// int32 roboData.size
 	// int32 roboData.frameId
@@ -68,4 +68,6 @@ class SEPTEMSERVO_API FTestPackets
 public:
 	FTestPackets();
 	~FTestPackets();
+
+	void OnRegistPackets();
 };

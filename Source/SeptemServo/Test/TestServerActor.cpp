@@ -1,6 +1,7 @@
 // Copyright (c) 2013-2019 7Mersenne All Rights Reserved.
 
 #include "TestServerActor.h"
+#include "TestPackets.h"
 
 // Sets default values
 ATestServerActor::ATestServerActor()

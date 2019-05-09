@@ -47,9 +47,9 @@ FProtocolFactory & FProtocolFactory::SingletonRef()
 	return *pSingleton;
 }
 
-bool FProtocolFactory::RegisterProtocolDeserialize(int32 InUid, std::function<void(FSNetBufferHead&, uint8*, int32, int32&)>&& InLambda)
+bool FProtocolFactory::RegisterProtocolDeserialize(int32 InUid, std::function<void (FSNetBufferHead&, uint8*, int32, int32&)> && InLambda)
 {
-	auto itr = ProtocolDeserializeDelegates.insert(std::pair<int32, std::function< void(FSNetBufferHead&, uint8*, int32, int32&)> >(InUid, InLambda));
+	auto itr = ProtocolDeserializeDelegates.insert(std::pair<int32, std::function<void (FSNetBufferHead&, uint8*, int32, int32&)> >(InUid, InLambda));
 	return itr.second;
 }
 
