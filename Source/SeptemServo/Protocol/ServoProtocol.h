@@ -36,6 +36,9 @@
 struct SEPTEMSERVO_API FSNetBufferHead
 {
 	int32 syncword; // combine with 4 char(uint8).  make them differents to get efficient  
+	/*
+	* version & 1 = 1 means serialize body, 0 means buffer body
+	*/
 	uint8 version;
 	uint8 fastcode;  // xor value without this byte
 	uint16 uid; // unique class id
@@ -53,11 +56,16 @@ struct SEPTEMSERVO_API FSNetBufferHead
 	}
 
 	FSNetBufferHead& operator=(const FSNetBufferHead& Other);
-	FORCEINLINE bool MemRead(uint8 *Data, int32 BufferSize);
-	FORCEINLINE static int32 MemSize();
+	bool MemRead(uint8 *Data, int32 BufferSize);
+	static int32 MemSize();
 	uint8 XOR();
 	void Reset();
 	int32 SessionID();
+	
+	//-----------------------------------------------------------------------------------------
+	//	version judgement
+	//-----------------------------------------------------------------------------------------
+	bool IsSerializedPacket();
 };
 #pragma pack(pop)
 
@@ -107,7 +115,7 @@ struct SEPTEMSERVO_API FSNetBufferBody
 
 	bool IsValid();
 	FORCEINLINE bool MemRead(uint8 *Data, int32 BufferSize, int32 InLength);
-	FORCEINLINE int32 MemSize();
+	int32 MemSize();
 	uint8 XOR();
 
 	void Reset();
@@ -171,7 +179,7 @@ struct SEPTEMSERVO_API FSNetBufferFoot
 	}
 
 	FORCEINLINE bool MemRead(uint8 *Data, int32 BufferSize);
-	FORCEINLINE static int32 MemSize();
+	static int32 MemSize();
 	uint8 XOR();
 
 	void Reset()
@@ -231,6 +239,7 @@ struct SEPTEMSERVO_API FSNetPacket
 
 	static FSNetPacket* CreateHeartbeat(int32 InSyncword = DEFAULT_SYNCWORD_INT32);
 	void ReUse(uint8* Data, int32 BufferSize, int32& BytesRead, int32 InSyncword = DEFAULT_SYNCWORD_INT32);
+	void ReUse(FSNetBufferHead& InHead, uint8* Data, int32 BufferSize, int32& BytesRead);
 	void WriteToArray(TArray<uint8>& InBufferArr);
 	void OnDealloc();
 	void OnAlloc();

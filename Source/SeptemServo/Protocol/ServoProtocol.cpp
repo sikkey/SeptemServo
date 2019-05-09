@@ -109,6 +109,11 @@ int32 FSNetBufferHead::SessionID()
 	return reserved & ((1 << 22) - 1);
 }
 
+bool FSNetBufferHead::IsSerializedPacket()
+{
+	return version & 1;
+}
+
 bool FSNetPacket::IsValid()
 {
 	return bFastIntegrity;
@@ -265,6 +270,55 @@ void FSNetPacket::ReUse(uint8 * Data, int32 BufferSize, int32 & BytesRead, int32
 	}
 
 	// 4. read foot
+	if (!Foot.MemRead(Data + index, BufferSize - index))
+	{
+		// failed to read from the rest buffer
+		BytesRead = BufferSize;
+		return;
+	}
+
+	index += FSNetBufferFoot::MemSize();
+	fastcode ^= Foot.XOR();
+
+	BytesRead = index;
+	bFastIntegrity = fastcode == 0;
+
+	sid = Head.SessionID();
+
+	return;
+}
+
+void FSNetPacket::ReUse(FSNetBufferHead & InHead, uint8 * Data, int32 BufferSize, int32 & BytesRead)
+{
+	sid = 0;
+	bFastIntegrity = false;
+
+	// 1. setup head
+	Head = InHead;
+	int32 index = 0;
+	uint8 fastcode = 0;
+
+	fastcode ^= Head.XOR();
+
+	if (0 == Head.uid)
+	{
+		sid = Head.SessionID();
+	}
+
+	// 2. check and read body
+	if (0 != Head.uid)
+	{
+		if (!Body.MemRead(Data + index, BufferSize - index, Head.size))
+		{
+			// failed to read from the rest buffer
+			BytesRead = BufferSize;
+			return;
+		}
+		index += Body.MemSize();
+		fastcode ^= Body.XOR();
+	}
+
+	// 3. read foot
 	if (!Foot.MemRead(Data + index, BufferSize - index))
 	{
 		// failed to read from the rest buffer

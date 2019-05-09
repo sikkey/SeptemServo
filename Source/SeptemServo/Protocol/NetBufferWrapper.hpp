@@ -27,12 +27,17 @@ public:
 	{
 	}
 
+	virtual ~TSNetBufferWrapper()
+	{
+		// auto call ~T()
+	}
+
 	/**
 	 * Reset the values
 	 */
 	void Reset()
 	{
-		FStaticNetBodyBase* base = &T;
+		FStaticNetBodyBase* base = &obj;
 		base->Reset();
 	}
 
@@ -47,7 +52,7 @@ public:
 	 */
 	bool Serialize(uint8* Data, int32 BufferSize, int32& OutSize)
 	{
-		FStaticNetBodyBase* base = &T;
+		FStaticNetBodyBase* base = &obj;
 		return base->Serialize(Data, BufferSize, int32& OutSize);
 	}
 
@@ -61,7 +66,7 @@ public:
 	 */
 	bool Deserialize(uint8* Data, int32 BufferSize)
 	{
-		FStaticNetBodyBase* base = &T;
+		FStaticNetBodyBase* base = &obj;
 		return base->Deserialize(Data, BufferSize);
 	}
 
@@ -73,7 +78,7 @@ public:
 	 */
 	virtual int32 MemSize()
 	{
-		FStaticNetBodyBase* base = &T;
+		FStaticNetBodyBase* base = &obj;
 		return base->MemSize();
 	}
 
@@ -84,7 +89,7 @@ public:
 	 */
 	uint8 XOR()
 	{
-		FStaticNetBodyBase* base = &T;
+		FStaticNetBodyBase* base = &obj;
 		return base->XOR();
 	}
 };

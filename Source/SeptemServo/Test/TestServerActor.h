@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "../Threads/ListenThread.h"
 #include "../Protocol/ServoProtocol.h"
+#include "TestPackets.h"
+#include "../Protocol/ServoStaticProtocol.hpp"
 #include "TestServerActor.generated.h"
 
 UCLASS()
@@ -75,6 +77,9 @@ public:
 		bool bCleanup;
 
 	TSharedPtr<FSNetPacket, ESPMode::ThreadSafe> LastPacket;
+	TSharedPtr<TSNetPacket<FNetBody1exo>, ESPMode::ThreadSafe> Last1exoPacket;
+	TSharedPtr<TSNetPacket<FNetBody2exo>, ESPMode::ThreadSafe> Last2exoPacket;
+
 	UFUNCTION(BlueprintCallable, Category = "Server")
 		int32 GetHeadSyncword();
 	UFUNCTION(BlueprintCallable, Category = "Server")

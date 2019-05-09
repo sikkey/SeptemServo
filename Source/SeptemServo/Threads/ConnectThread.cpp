@@ -2,6 +2,8 @@
 
 #include "ConnectThread.h"
 #include "../Protocol/ServoProtocol.h"
+#include "../Protocol/ServoStaticProtocol.hpp"
+#include "../Protocol/ProtocolFactory.h"
 
 // default buffer max  = 1mb
 int32 FConnectThread::MaxReceivedCount = 1024 * 1024;
@@ -13,6 +15,7 @@ FConnectThread::FConnectThread()
 	, ClientIPAdress(0ui32)
 	, Port(3717)
 	, RankId(0)
+	, Syncword(DEFAULT_SYNCWORD_INT32)
 {
 	ReceivedData.Reset(MaxReceivedCount);
 }
@@ -24,6 +27,7 @@ FConnectThread::FConnectThread(FSocket * InSocket, FIPv4Address & InIP, int32 In
 	, ClientIPAdress(InIP)
 	, Port(InPort)
 	, RankId(InRank)
+	, Syncword(DEFAULT_SYNCWORD_INT32)
 {
 	ReceivedData.Reset(MaxReceivedCount);
 }
@@ -58,6 +62,9 @@ uint32 FConnectThread::Run()
 	int32 BytesRead = 0;
 	bool bRcev = false;
 	FServoProtocol* ServoProtocol = FServoProtocol::Get();
+	FProtocolFactory* ProtocolFactory = FProtocolFactory::Get();
+	FSNetBufferHead PacketHead;
+	PacketHead.syncword = Syncword;
 
 	if (nullptr == ConnectSocket)
 	{
@@ -91,8 +98,71 @@ uint32 FConnectThread::Run()
 				
 				int32 TotalBytesRead = 0;
 				int32 RecivedBytesRead = 0;
-				while (TotalBytesRead < BytesRead && ServoProtocol->PacketPoolNum() < SERVO_PROTOCOL_PACKET_POOL_MAX)
+				int32 HeadIndex = 0;
+				while (TotalBytesRead < BytesRead)
 				{
+
+					//------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+					// New version of protocol, use buffer body and template class body
+					//------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+					
+					// 1. use syncword to find the index of PacketHead
+					HeadIndex = Septem::BufferBufferSyncword(ReceivedData.GetData() + TotalBytesRead, BytesRead - TotalBytesRead, Syncword);
+
+					if (-1 == HeadIndex)
+					{
+						// failed to find syncword in the whole buffer
+						TotalBytesRead = BytesRead;
+						break;
+					}
+
+					// 2. discard buffer before syncword
+					TotalBytesRead += HeadIndex;
+
+					// 3. read head @ ReceivedData.GetData() + TotalBytesRead
+					if (!PacketHead.MemRead(ReceivedData.GetData() + TotalBytesRead, BytesRead - TotalBytesRead))
+					{
+						// failed to find syncword in the whole buffer
+						TotalBytesRead += FSNetBufferHead::MemSize();
+						break;
+					}
+
+					TotalBytesRead += FSNetBufferHead::MemSize();
+
+					// 4. select PacketHead.version for deserialize packet body
+					if (PacketHead.IsSerializedPacket() && ProtocolFactory->IsProtocolRegister(PacketHead.uid))
+					{
+						// serialiezed packet
+						ProtocolFactory->CallProtocolDeserializeWithoutCheck(PacketHead, ReceivedData.GetData() + TotalBytesRead, ReceivedData.Num() - TotalBytesRead, RecivedBytesRead);
+						TotalBytesRead += RecivedBytesRead;
+					}
+					else {
+						// buffer packet
+						TSharedPtr<FSNetPacket, ESPMode::ThreadSafe> pPacket(ServoProtocol->AllocNetPacket());
+						pPacket->ReUse(PacketHead, ReceivedData.GetData() + TotalBytesRead, ReceivedData.Num() - TotalBytesRead, RecivedBytesRead);
+						TotalBytesRead += RecivedBytesRead;
+						FPlatformMisc::MemoryBarrier();
+						UE_LOG(LogTemp, Display, TEXT("FConnectThread: write bytes %d, total write bytes %d \n"), RecivedBytesRead, TotalBytesRead);
+
+						if (pPacket->IsValid())
+						{
+							ServoProtocol->Push(pPacket);
+						}
+						else {
+							// packet is illegal, dealloc shared pointer
+							ServoProtocol->DeallockNetPacket(pPacket);
+						}
+					}
+
+					/*
+					//------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+					// Old version of protocol, only use buffer body
+					//------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+					if (ServoProtocol->PacketPoolNum() >= SERVO_PROTOCOL_PACKET_POOL_MAX)
+					{
+						break;
+					}
+
 					TSharedPtr<FSNetPacket, ESPMode::ThreadSafe> pPacket(ServoProtocol->AllocNetPacket());
 					pPacket->ReUse(ReceivedData.GetData() + TotalBytesRead, ReceivedData.Num(), RecivedBytesRead);
 					TotalBytesRead += RecivedBytesRead;
@@ -108,6 +178,7 @@ uint32 FConnectThread::Run()
 						// packet is illegal, dealloc shared pointer
 						ServoProtocol->DeallockNetPacket(pPacket);
 					}
+					*/
 				}
 			}
 			else {
