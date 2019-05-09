@@ -62,25 +62,26 @@ public:
  */
 template<typename T, ESPMode TMode = ESPMode::Fast>
 class SEPTEMSERVO_API TNetPacketStack
+	: public TNetPacketPool<T, TMode>
 {
 public:
 	FORCEINLINE TNetPacketStack()
 		: TNetPacketPool()
 	{
-		FScopeLock lockPool(&StackPool);
+		FScopeLock lockPool(&StackLock);
 		StackPool.Reset(MAX_NETPACKET_IN_POOL);
 	}
 
 	virtual ~TNetPacketStack()
 	{
-		FScopeLock lockPool(&StackPool);
+		FScopeLock lockPool(&StackLock);
 		StackPool.Empty(StackPool.Max());
 	}
 
 	// Thread-safe
 	virtual bool Push(const TSharedPtr<T, TMode>& InSharedPtr) override
 	{
-		FScopeLock lockPool(&StackPool);
+		FScopeLock lockPool(&StackLock);
 		//StackPool.Push(InSharedPtr);
 		StackPool.Emplace(InSharedPtr);
 		return true;
@@ -88,7 +89,7 @@ public:
 	// Thread-safe
 	virtual bool Pop(TSharedPtr<T, TMode>& OutSharedPtr) override
 	{
-		FScopeLock lockPool(&StackPool);
+		FScopeLock lockPool(&StackLock);
 		if (IsEmpty())
 			return false;
 		OutSharedPtr = StackPool.Pop(false);
