@@ -119,6 +119,7 @@ struct SEPTEMSERVO_API TSNetPacket
 	void OnDealloc();
 	void OnAlloc();
 	bool operator < (TSNetPacket<T> && Other);
+	bool operator < (const TSNetPacket<T> & Other);
 };
 
 /**
@@ -337,7 +338,7 @@ inline void TSNetPacket<T>::ReUse(FSNetBufferHead & InHead, uint8 * Buffer, int3
 			return;
 		}
 
-		if (!Body.Deserialize(Data + index, BufferSize - index))
+		if (!Body.Deserialize(Buffer + index, BufferSize - index))
 		{
 			// failed to read from the rest buffer
 			BytesRead = BufferSize;
@@ -348,7 +349,7 @@ inline void TSNetPacket<T>::ReUse(FSNetBufferHead & InHead, uint8 * Buffer, int3
 	}
 
 	// 3. read foot
-	if (!Foot.MemRead(Data + index, BufferSize - index))
+	if (!Foot.MemRead(Buffer + index, BufferSize - index))
 	{
 		// failed to read from the rest buffer
 		BytesRead = BufferSize;
@@ -421,6 +422,12 @@ inline void TSNetPacket<T>::OnAlloc()
 
 template<typename T>
 inline bool TSNetPacket<T>::operator<(TSNetPacket<T>&& Other)
+{
+	return Foot.timestamp < Other.Foot.timestamp;
+}
+
+template<typename T>
+inline bool TSNetPacket<T>::operator<(const TSNetPacket<T>& Other)
 {
 	return Foot.timestamp < Other.Foot.timestamp;
 }
