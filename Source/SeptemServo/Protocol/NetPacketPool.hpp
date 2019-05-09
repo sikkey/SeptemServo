@@ -171,7 +171,14 @@ public:
 	bool Push(const TSharedPtr<T, TMode>& InSharedPtr) override
 	{
 		FScopeLock lockPool(&HeapLock);
-		return heapPool.HeapPush(InSharedPtr) >=0;
+		return heapPool.HeapPush(InSharedPtr , 
+			[](const TSharedPtr<T, TMode>& A, const TSharedPtr<T, TMode>& B)
+			{
+				if (!A.IsValid()) return true;
+				if (!B.IsValid()) return false;
+				return  *(A.Get()) < *(B.Get());
+			}
+		) >=0;
 	}
 
 	bool Pop(TSharedPtr<T, TMode>& OutSharedPtr) override
@@ -179,7 +186,15 @@ public:
 		FScopeLock lockPool(&HeapLock);
 		if (IsEmpty())
 			return false;
-		heapPool.HeapPop(OutSharedPtr, false);
+		heapPool.HeapPop(OutSharedPtr,
+			[](const TSharedPtr<T, TMode>& A, const TSharedPtr<T, TMode>& B)
+			{
+				if (!A.IsValid()) return true;
+				if (!B.IsValid()) return false;
+				return  *(A.Get()) < *(B.Get());
+			},
+			false
+		);
 		return true;
 	}
 
