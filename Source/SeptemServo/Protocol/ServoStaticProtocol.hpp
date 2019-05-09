@@ -198,13 +198,13 @@ private:
 		switch (PoolMode)
 		{
 		case SPPMode::Stack:
-			PacketPool = new TNetPacketStack<FSNetPacket, ESPMode::ThreadSafe>();
+			PacketPool = new TNetPacketStack<TSNetPacket<T>, ESPMode::ThreadSafe>();
 			break;
 		case SPPMode::Heap:
-			PacketPool = new TNetPacketHeap<FSNetPacket, ESPMode::ThreadSafe>();
+			PacketPool = new TNetPacketHeap<TSNetPacket<T>, ESPMode::ThreadSafe>();
 			break;
 		default:
-			PacketPool = new TNetPacketQueue<FSNetPacket, ESPMode::ThreadSafe>();
+			PacketPool = new TNetPacketQueue<TSNetPacket<T>, ESPMode::ThreadSafe>();
 			break;
 		}
 	}
@@ -538,7 +538,7 @@ inline void TServoProtocol<T, PtrMode, PoolMode>::OnReceivedPacket(FSNetBufferHe
 {
 	TSharedPtr<TSNetPacket<T>, PtrMode> pPacket(AllocNetPacket());
 
-	pPacket->ReUse(PacketHead, Buffer, BufferSize, RecivedBytesRead);
+	pPacket->ReUse(InHead, Buffer, BufferSize, ReceivedBytesRead);
 
 	if (pPacket->IsValid())
 	{
