@@ -57,3 +57,11 @@ plugin version of SeptemServoPro , Alpha
 3. git submodule update
 4. 重新生成、编译VS工程。重新编译ue4项目
 
+###删除模块
+```
+git submodule deinit SeptemServo
+```
+###删除.gitmodules中记录的模块信息（--cached选项清除.git/modules中的缓存）
+```
+git rm --cached SeptemServo
+```
