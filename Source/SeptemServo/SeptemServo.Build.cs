@@ -27,7 +27,7 @@ public class SeptemServo : ModuleRules
 			new string[]
 			{
                 "Core", "CoreUObject", "Engine", "InputCore",
-            "Sockets","Networking"
+            "Sockets","Networking", "SeptemCore"
             }
 			);
 

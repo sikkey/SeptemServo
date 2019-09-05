@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 
 #include "NetPacketPool.hpp"
-#include "../SeptemAlgorithm/SeptemAlgorithm.h"
+//#include "../SeptemAlgorithm/SeptemAlgorithm.h"
+#include "SeptemCore/Algorithm/SeptemAlgorithm.h"
+#include "SeptemCore/Templates/SeptemRecyclePool.hpp"
 
 //#define SERVO_PROTOCOL_SIGNATURE
 
