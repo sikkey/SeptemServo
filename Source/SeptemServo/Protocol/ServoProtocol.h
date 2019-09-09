@@ -116,7 +116,7 @@ struct SEPTEMSERVO_API FSNetBufferBody
 	}
 
 	bool IsValid();
-	FORCEINLINE bool MemRead(uint8 *Data, int32 BufferSize, int32 InLength);
+	bool MemRead(uint8 *Data, int32 BufferSize, int32 InLength);
 	int32 MemSize();
 	uint8 XOR();
 
@@ -180,7 +180,7 @@ struct SEPTEMSERVO_API FSNetBufferFoot
 	{
 	}
 
-	FORCEINLINE bool MemRead(uint8 *Data, int32 BufferSize);
+	bool MemRead(uint8 *Data, int32 BufferSize);
 	static int32 MemSize();
 	uint8 XOR();
 
