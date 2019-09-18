@@ -10,8 +10,12 @@ plugin version of SeptemServoPro , Alpha
 3. cd the directory of the project
 4. mkdir ./Plugins/
 5. cd ./Plugins/
-6. git submodule add https://github.com/sikkey/SeptemServo.git SeptemServo
-	(Makesure the directory name is SeptemServo)
+6. Add submodules SeptemCore and SeptemServo(Makesure the directory name is SeptemServo)
+```
+	git submodule add https://github.com/sikkey/SeptemCore.git SeptemCore
+	git submodule add https://github.com/sikkey/SeptemServo.git SeptemServo
+```
+SeptemCore need loading before SeptemServo
 7. generate vs project files
 8. build vs project
 9. reopen ue4 project & rebuild in engine
@@ -29,6 +33,15 @@ plugin version of SeptemServoPro , Alpha
 3. git submodule update
 4. generate vs project files, rebuild in vs, then rebuild in ue4
 
+###Remove submodule
+```
+git submodule deinit SeptemServo
+```
+###delete submodule info at /.gitmodules/（--cached means clear cache files in /.git/modules/）
+```
+git rm --cached SeptemServo
+```
+
 
 ##使用说明 (中文):
 
@@ -37,8 +50,12 @@ plugin version of SeptemServoPro , Alpha
 3. cd进入项目目录
 4. (可选)创建Plugins目录	mkdir ./Plugins/
 5. 进入Plugins目录	cd ./Plugins/
-6. 运行命令行，添加git子模组(确保子模组文件夹名为SeptemServo)
+6. 运行命令行，添加git子模组SeptemCore和SeptemServo(确保子模组文件夹名为SeptemServo)
+```
+	git submodule add https://github.com/sikkey/SeptemCore.git SeptemCore
 	git submodule add https://github.com/sikkey/SeptemServo.git SeptemServo
+```
+SeptemCore 为SeptemServo的前置模组
 7. 右键.uproject文件，重新生成VS工程文件
 8. 重新编译VS工程
 9. 重新打开UE4工程，并重新在引擎编辑器中测试或重编译项目
@@ -57,3 +74,11 @@ plugin version of SeptemServoPro , Alpha
 3. git submodule update
 4. 重新生成、编译VS工程。重新编译ue4项目
 
+###删除模块
+```
+git submodule deinit SeptemServo
+```
+###删除.gitmodules中记录的模块信息（--cached选项清除.git/modules中的缓存）
+```
+git rm --cached SeptemServo
+```
