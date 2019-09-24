@@ -2,6 +2,21 @@
 设计思路及用户引导
 ## Threads
 
+服务器线程由监听线程FListenThread 连接池线程 FConnectThreadPoolThread 和 连接线程FConnectThread 组成
+
+启动服务器监听线程
+```
+ServerThread = FListenThread::Create(Port, PoolTimespan);
+
+// block kill
+ServerThread->KillThread();
+delete ServerThread;
+ServerThread = nullptr;
+
+// unblock Kill
+ServerThread->Stop
+```
+
 ## Protocol 协议
 
 ### TSNetPacket\<FStaticNetBodyBase_Child\> 网络包
@@ -74,6 +89,9 @@ if (PacketHead.IsSerializedPacket() && FProtocolFactory::Get()->IsProtocolRegist
 ```
 
 ### 小结
+1. 定义一个网络包协议, 继承FStaticNetBodyBase
+2. 向工厂类FProtocolFactory注册网络包
+3. 调用工厂类解码网络包
 
 ## F.A.Q
 
