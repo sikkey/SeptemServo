@@ -111,7 +111,7 @@ void FClientThread::SendBuffer(uint8 * InBuffer, int32 InBufferLength, bool bCop
 
 		if (bCopy)
 		{
-			m_SendBuffer.SetNumZeroed(InBufferLength);
+			m_SendBuffer.SetNumUninitialized(InBufferLength);
 			FMemory::Memcpy(m_SendBuffer.GetData(), InBuffer, InBufferLength);
 			if (ClientSocket->Send(m_SendBuffer.GetData(), InBufferLength, bytesSend))
 			{

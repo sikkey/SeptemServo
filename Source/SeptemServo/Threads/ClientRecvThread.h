@@ -45,6 +45,8 @@ protected:
 
 	//=========== Server Settings Begin  ==============//
 	FIPv4Endpoint ServerEndPoint;
+
+	int32 Syncword;
 	//=========== Server Settings End	 ==============//
 
 	//---------------------------------------------

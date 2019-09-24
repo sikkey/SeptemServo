@@ -55,7 +55,8 @@ void FSNetBufferBody::Reset()
 {
 	if (bufferPtr)
 	{
-		delete bufferPtr;
+		delete [] bufferPtr;
+		//free(bufferPtr);
 		bufferPtr = nullptr;
 		
 	}
