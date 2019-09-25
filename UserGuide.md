@@ -2,7 +2,7 @@
 设计思路及用户引导
 ## Threads
 
-服务器线程由监听线程FListenThread 连接池线程 FConnectThreadPoolThread 和 连接线程FConnectThread 组成
+* 服务器线程由监听线程FListenThread 连接池线程 FConnectThreadPoolThread 和 连接线程FConnectThread 组成
 
 启动服务器监听线程
 ```
@@ -16,6 +16,20 @@ ServerThread = nullptr;
 // unblock Kill
 ServerThread->Stop
 ```
+监听线程(FListenThread)自动启动 连接池线程(FConnectThreadPoolThread)
+连接池线程(FConnectThreadPoolThread) 当有连接时创建连接线程(FConnectThread)
+
+* 客户端线程由ClientThread和ClientRecvThread组成
+
+ClientThread 负责发送信息、启动接收线程
+
+ClientRecvThread 负责接收信息
+
+```
+ClientThread = FClientThread::Create(ServerEndPoint);
+ClientThread->SendBuffer(Buffer, BufferLen, false);
+```
+
 
 ## Protocol 协议
 

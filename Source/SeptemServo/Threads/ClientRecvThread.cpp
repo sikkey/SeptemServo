@@ -25,10 +25,22 @@ FClientRecvThread::FClientRecvThread(ISocketInterface * InSocketInterface, FIPv4
 
 	LifecycleStep.Set(0);
 	TimeToDie = false;
+	Syncword = DEFAULT_SYNCWORD_INT32;
 }
 
 FClientRecvThread::~FClientRecvThread()
 {
+	if (LifecycleStep.GetValue() == 2)
+	{
+		UE_LOG(LogTemp, Display, TEXT("FClientRecvThread destruct: cannot exit safe"));
+	}
+
+	// cleanup thread
+	if (nullptr != Thread)
+	{
+		delete Thread;
+		Thread = nullptr;
+	}
 }
 
 bool FClientRecvThread::Init()
@@ -147,12 +159,66 @@ uint32 FClientRecvThread::Run()
 
 void FClientRecvThread::Stop()
 {
-	LifecycleStep.Set(0);
+	TimeToDie = true;
 }
 
 void FClientRecvThread::Exit()
 {
 	LifecycleStep.Set(3);
+}
+
+FClientRecvThread * FClientRecvThread::Create(ISocketInterface * InSocketInterface, FIPv4Endpoint & InServerEndPoint)
+{
+	// create runnable
+	FClientRecvThread* runnable = new FClientRecvThread();
+	runnable->SocketInterface = InSocketInterface;
+	runnable->ServerEndPoint = InServerEndPoint;
+
+	// create thread with runnable
+	FRunnableThread* thread = FRunnableThread::Create(runnable, TEXT("FClientRecvThread"), 0, TPri_BelowNormal); //windows default = 8mb for thread, could specify 
+
+	if (nullptr == thread)
+	{
+		// create failed
+		delete runnable;
+		return nullptr;
+	}
+
+	// setting thread
+	runnable->Thread = thread;
+	return runnable;
+}
+
+bool FClientRecvThread::KillThread()
+{
+	bool bDidExit = true;
+
+	TimeToDie = true;
+
+	if (nullptr != Thread)
+	{
+		// Trigger the thread so that it will come out of the wait state if
+		// it isn't actively doing work
+		//if(event) event->Trigger();
+
+		Stop();
+
+		// If waiting was specified, wait the amount of time. If that fails,
+		// brute force kill that thread. Very bad as that might leak.
+		Thread->WaitForCompletion();	//block call
+
+		// Clean up the event
+		// if(event) FPlatformProcess::ReturnSynchEventToPool(event);
+		// event = nullptr;
+
+		// here will call Stop()
+		delete Thread;
+		Thread = nullptr;
+
+		// socket had been safe release in exit();
+	}
+
+	return bDidExit;
 }
 
 

@@ -56,4 +56,19 @@ protected:
 	/** If true, the thread should exit. */
 	TAtomic<bool> TimeToDie;
 	FThreadSafeCounter LifecycleStep;
+
+	FRunnableThread* Thread;
+
+public:
+	static FClientRecvThread* Create(ISocketInterface* InSocketInterface, FIPv4Endpoint& InServerEndPoint);
+
+	/**
+	* Tells the thread to exit. If the caller needs to know when the thread
+	* has exited, it should use the bShouldWait value and tell it how long
+	* to wait before deciding that it is deadlocked and needs to be destroyed.
+	* NOTE: having a thread forcibly destroyed can cause leaks in TLS, etc.
+	*
+	* @return True if the thread exited graceful, false otherwise
+	*/
+	bool KillThread();// use KillThread instead of thread->kill
 };

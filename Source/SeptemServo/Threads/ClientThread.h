@@ -20,8 +20,8 @@ const unsigned char __TELNET_HEART_BEAT__[2] = { 255, 241 };
 
 /**
  * Client thread
- * Handle socket* 
- * 
+ * Handle socket*
+ *
  */
 class SEPTEMSERVO_API FClientThread : public FRunnable, public ISocketInterface
 {
@@ -48,7 +48,7 @@ public:
 	void SendByteUDP(uint8 InByte);
 	void SendNopUDP();
 	*/
-	
+
 	virtual FSocket* GetSocket() override;
 	//=========== Client Socket End  ==============//
 protected:
@@ -65,5 +65,31 @@ protected:
 	int32 ClientState = 0;
 
 	TArray<uint8> m_SendBuffer;
+	FClientRecvThread* ClientRecvThread;
 	//=========== Client End  ==============//
+
+	//---------------------------------------------
+	// thread control
+	//---------------------------------------------
+
+	/** If true, the thread should exit. */
+	TAtomic<bool> TimeToDie;
+	FThreadSafeCounter LifecycleStep;
+
+	// Client thread
+	FRunnableThread* Thread;
+
+public:
+	static FClientThread* Create(FIPv4Endpoint InServerEndPoint);
+
+	/**
+	* Tells the thread to exit. If the caller needs to know when the thread
+	* has exited, it should use the bShouldWait value and tell it how long
+	* to wait before deciding that it is deadlocked and needs to be destroyed.
+	* NOTE: having a thread forcibly destroyed can cause leaks in TLS, etc.
+	*
+	* @return True if the thread exited graceful, false otherwise
+	*/
+	bool KillThread();// use KillThread instead of thread->kill
 };
+
