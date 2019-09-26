@@ -66,6 +66,7 @@ protected:
 
 	TArray<uint8> m_SendBuffer;
 	FClientRecvThread* ClientRecvThread;
+	bool bRepeatConnect;
 	//=========== Client End  ==============//
 
 	//---------------------------------------------
