@@ -111,6 +111,28 @@ if (PacketHead.IsSerializedPacket() && FProtocolFactory::Get()->IsProtocolRegist
 
 ### How to make a new netpacket?
 
+1. 定义一个网络包协议, 继承FStaticNetBodyBase
+2. 向工厂类FProtocolFactory注册网络包
+3. 调用工厂类解码网络包
+
 ### How to create a tcp server?
 
+```
+ServerThread = FListenThread::Create(Port, PoolTimespan);
+
+// block kill
+ServerThread->KillThread();
+delete ServerThread;
+ServerThread = nullptr;
+
+// unblock Kill
+ServerThread->Stop
+```
+
+
 ### How to create a tcp client?
+
+```
+ClientThread = FClientThread::Create(ServerEndPoint);
+ClientThread->SendBuffer(Buffer, BufferLen, false);
+```
