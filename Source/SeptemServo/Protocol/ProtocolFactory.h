@@ -45,3 +45,14 @@ public:
 protected:
 	std::map < int32, std::function< void(FSNetBufferHead&, uint8*, int32, int32&)> > ProtocolDeserializeDelegates;
 };
+
+#ifndef __REG_PROTOCOL_NETBODY_THREADSAFE_QUEUE
+#define __REG_PROTOCOL_NETBODY_THREADSAFE_QUEUE(UID, TYPE)\
+FProtocolFactory::Get()->RegisterProtocolDeserialize(UID, \
+	, std::bind(&TServoProtocol < TYPE, ESPMode::ThreadSafe, SPPMode::Queue>::OnReceivedPacket\
+	, std::placeholders::_1\
+	, std::placeholders::_2\
+	, std::placeholders::_3\
+	, std::placeholders::_4\
+);
+#endif // !__REG_PROTOCOL_NETBODY_THREADSAFE_QUEUE
