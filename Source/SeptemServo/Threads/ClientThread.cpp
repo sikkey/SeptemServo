@@ -10,6 +10,7 @@ FClientThread::FClientThread()
 	ClientRecvThread = nullptr;
 	TimeToDie = false;
 	LifecycleStep.Set(0);
+	bRepeatConnect = true;
 }
 
 FClientThread::~FClientThread()
@@ -44,12 +45,7 @@ bool FClientThread::Init()
 {
 	LifecycleStep.Set(1);
 
-	if (1 == ClientState)
-	{
-		// create recv thread
-		ClientRecvThread = FClientRecvThread::Create(this, ServerEndPoint);
-		return true;
-	}
+	ConnectToServer();
 
 	return true;
 }
@@ -57,6 +53,20 @@ bool FClientThread::Init()
 uint32 FClientThread::Run()
 {
 	LifecycleStep.Set(2);
+	UE_LOG(LogTemp, Display, TEXT("FClientThread: running begin \n"));
+	while (!TimeToDie)
+	{
+		if (ClientRecvThread)
+		{
+			//UE_LOG(LogTemp, Display, TEXT("FClientThread: running gogogoogo \n"));
+		}
+		else {
+			if (bRepeatConnect)
+			{
+				ConnectToServer();
+			}
+		}
+	}
 	return 0U;
 }
 
@@ -82,7 +92,7 @@ void FClientThread::ConnectToServer()
 		// 2. connect socket
 		TSharedRef<FInternetAddr> ServerAddr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr(ServerEndPoint.Address.Value, ServerEndPoint.Port);
 		bool bConnect = ClientSocket->Connect(*ServerAddr);
-
+		UE_LOG(LogTemp, Display, TEXT("FClientThread: connect to %s \n"), *ServerAddr->ToString(true));
 		if (!bConnect)
 		{
 			UE_LOG(LogTemp, Display, TEXT("FClientThread: connect to server failed! \n"));
