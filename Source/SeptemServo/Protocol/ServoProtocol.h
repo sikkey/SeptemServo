@@ -95,7 +95,7 @@ union Union32
 static UnionSyncword SyncwordDefault =
 #if PLATFORM_LITTLE_ENDIAN > 0
 	{ 162ui8, 241ui8, 183ui8, 230ui8 };
-#elif
+#else
 	{ 230ui8, 183ui8, 241ui8, 162ui8 };
 #endif
 
