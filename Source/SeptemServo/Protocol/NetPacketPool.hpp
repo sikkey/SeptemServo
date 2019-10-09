@@ -66,7 +66,7 @@ class SEPTEMSERVO_API TNetPacketStack
 {
 public:
 	FORCEINLINE TNetPacketStack()
-		: TNetPacketPool()
+		: TNetPacketPool<T, TMode>()
 	{
 		FScopeLock lockPool(&StackLock);
 		StackPool.Reset(MAX_NETPACKET_IN_POOL);
@@ -116,7 +116,7 @@ class SEPTEMSERVO_API TNetPacketQueue
 {
 public:
 	FORCEINLINE TNetPacketQueue()
-		: TNetPacketPool()
+		: TNetPacketPool<T,TMode>()
 	{
 	}
 
@@ -156,7 +156,7 @@ class SEPTEMSERVO_API TNetPacketHeap
 {
 public:
 	FORCEINLINE TNetPacketHeap()
-		: TNetPacketPool()
+		: TNetPacketPool<T, TMode>()
 	{
 		FScopeLock lockPool(&HeapLock);
 		heapPool.Reset(MAX_NETPACKET_IN_POOL);
