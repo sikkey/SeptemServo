@@ -132,6 +132,28 @@ bool FSNetPacket::FastIntegrity(uint8 * DataPtr, int32 DataLength, uint8 fastcod
 	return _xor == fastcode;
 }
 
+void FSNetPacket::OnStampSeal()
+{
+	Foot.SetNow();
+
+	OnSeal();
+}
+
+void FSNetPacket::OnSeal()
+{
+	// fast code seal
+	if (Head.uid == 0)
+	{
+		Head.fastcode = Head.XOR() ^ Foot.XOR();
+	}
+	else
+	{
+		Head.fastcode = Head.XOR() ^ Body.XOR() ^ Foot.XOR();
+	}
+
+	bFastIntegrity = true;
+}
+
 bool FSNetPacket::CheckIntegrity()
 {
 	if (Head.uid == 0)

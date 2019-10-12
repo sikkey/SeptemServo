@@ -94,7 +94,7 @@ uint32 FConnectThread::Run()
 				}
 
 				// TODO: recv data for while every syncword
-				UE_LOG(LogTemp, Display, TEXT("FConnectThread: receive byte = %d length = %d\n"), ReceivedData.GetData()[0], ReceivedData.Num());
+				UE_LOG(LogTemp, Display, TEXT("FConnectThread: receive byte  length = %d\n"), ReceivedData.Num());
 				
 				int32 TotalBytesRead = 0;
 				int32 RecivedBytesRead = 0;

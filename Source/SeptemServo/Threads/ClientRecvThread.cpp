@@ -79,12 +79,12 @@ uint32 FClientRecvThread::Run()
 				if (BytesRead > ReceivedData.Num())
 				{
 					//stack overflow
-					UE_LOG(LogTemp, Display, TEXT("[Warnning]FConnectThread: receive stack overflow!\n"));
+					UE_LOG(LogTemp, Display, TEXT("[Warnning]FClientRecvThread: receive stack overflow!\n"));
 					continue;
 				}
 
 				// TODO: recv data for while every syncword
-				UE_LOG(LogTemp, Display, TEXT("FConnectThread: receive byte = %d length = %d\n"), ReceivedData.GetData()[0], ReceivedData.Num());
+				UE_LOG(LogTemp, Display, TEXT("FClientRecvThread: receive length = %d\n"), ReceivedData.Num());
 
 				int32 TotalBytesRead = 0;
 				int32 RecivedBytesRead = 0;
@@ -125,6 +125,7 @@ uint32 FClientRecvThread::Run()
 						// serialiezed packet
 						ProtocolFactory->CallProtocolDeserializeWithoutCheck(PacketHead, ReceivedData.GetData() + TotalBytesRead, ReceivedData.Num() - TotalBytesRead, RecivedBytesRead);
 						TotalBytesRead += RecivedBytesRead;
+						UE_LOG(LogTemp, Display, TEXT("FClientRecvThread: serialiezed packet write bytes %d, total write bytes %d, uid = %d \n"), RecivedBytesRead, TotalBytesRead, PacketHead.uid);
 					}
 					else {
 						// buffer packet
@@ -132,7 +133,7 @@ uint32 FClientRecvThread::Run()
 						pPacket->ReUse(PacketHead, ReceivedData.GetData() + TotalBytesRead, ReceivedData.Num() - TotalBytesRead, RecivedBytesRead);
 						TotalBytesRead += RecivedBytesRead;
 						FPlatformMisc::MemoryBarrier();
-						UE_LOG(LogTemp, Display, TEXT("FConnectThread: write bytes %d, total write bytes %d \n"), RecivedBytesRead, TotalBytesRead);
+						UE_LOG(LogTemp, Display, TEXT("FClientRecvThread: write bytes %d, total write bytes %d, packet is valid = %d \n"), RecivedBytesRead, TotalBytesRead, pPacket->IsValid());
 
 						if (pPacket->IsValid())
 						{
@@ -148,7 +149,7 @@ uint32 FClientRecvThread::Run()
 			else
 			{
 				//Error: pendingDataSize>0 Rcev failed
-				UE_LOG(LogTemp, Display, TEXT("FConnectThread: pending data size > 0, rcev failed. Check the length of ReceivedData.Num()"));
+				UE_LOG(LogTemp, Display, TEXT("FClientRecvThread: pending data size > 0, rcev failed. Check the length of ReceivedData.Num()"));
 			}
 		}
 	}

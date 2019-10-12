@@ -14,7 +14,7 @@ const unsigned char __TELNET_HEART_BEAT__[2] = { 255, 241 };
 #endif // !__TELNET_HEART_BEAT_DECLARE__
 
 #ifndef __SOCKET_BUFF_LENTH__
-#define __SOCKET_BUFF_LENTH__ 1024
+#define __SOCKET_BUFF_LENTH__ 65536
 #endif // !__SOCKET_BUFF_LENTH__
 
 /**

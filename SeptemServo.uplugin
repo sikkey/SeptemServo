@@ -1,7 +1,7 @@
 {
   "FileVersion": 3,
   "Version": 1,
-  "VersionName": "1.0",
+  "VersionName": "1.1.4",
   "FriendlyName": "SeptemServo",
   "Description": "Advanced Visual Server Written by Unreal4.  Build for Windows and Linux.",
   "Category": "Septem",

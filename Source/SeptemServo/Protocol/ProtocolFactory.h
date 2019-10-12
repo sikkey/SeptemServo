@@ -46,6 +46,17 @@ protected:
 	std::map < int32, std::function< void(FSNetBufferHead&, uint8*, int32, int32&)> > ProtocolDeserializeDelegates;
 };
 
+#ifndef __REG_PROTOCOL_NETBODY_THREADSAFE_STACK
+#define __REG_PROTOCOL_NETBODY_THREADSAFE_STACK(UID, TYPE)\
+Septem::FProtocolFactory::Get()->RegisterProtocolDeserialize(UID, \
+	, std::bind(&TServoProtocol < TYPE, SPPMode::Stack>::OnReceivedPacket\
+	, std::placeholders::_1\
+	, std::placeholders::_2\
+	, std::placeholders::_3\
+	, std::placeholders::_4\
+);
+#endif
+
 #ifndef __REG_PROTOCOL_NETBODY_THREADSAFE_QUEUE
 #define __REG_PROTOCOL_NETBODY_THREADSAFE_QUEUE(UID, TYPE)\
 FProtocolFactory::Get()->RegisterProtocolDeserialize(UID, \
