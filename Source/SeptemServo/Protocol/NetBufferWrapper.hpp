@@ -53,7 +53,7 @@ public:
 	bool Serialize(uint8* Data, int32 BufferSize, int32& OutSize)
 	{
 		FStaticNetBodyBase* base = &obj;
-		return base->Serialize(Data, BufferSize, int32& OutSize);
+		return base->Serialize(Data, BufferSize, OutSize);
 	}
 
 	/**

@@ -33,12 +33,12 @@ ClientThread->SendBuffer(Buffer, BufferLen, false);
 
 ## Protocol 协议
 
-### TSNetPacket\<FStaticNetBodyBase_Child\> 网络包
+### ```TSNetPacket<FStaticNetBodyBase_Child>``` 网络包
 一个网络包由head body foot三部分组成
 
 ```
 FSNetBufferHead Head;
-TSNetBufferWrapper\<FStaticNetBodyBase_Child\> Body;
+TSNetBufferWrapper<FStaticNetBodyBase_Child> Body;
 FSNetBufferFoot Foot;
 ```
 

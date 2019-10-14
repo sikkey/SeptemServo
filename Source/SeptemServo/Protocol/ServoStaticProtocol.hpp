@@ -26,12 +26,12 @@ struct SEPTEMSERVO_API TSNetPacket
 	// check data integrity with fastcode
 	static bool FastIntegrity(uint8* DataPtr, int32 DataLength, uint8 fastcode)
 	{
-		uint8 xor = 0;
+		uint8 _xor = 0;
 		for (int32 i = 0; i < DataLength; ++i)
 		{
-			xor ^= DataPtr[i];
+			_xor ^= DataPtr[i];
 		}
-		return xor == fastcode;
+		return _xor == fastcode;
 	}
 
 	bool CheckIntegrity();
